@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+{% load static %}
+{% block head_title %}Book Details{% endblock  %}
+{% block content %}
+<div class="bg-white mt-5 p-4">
+    <div class="bg-white shadow-lg rounded-lg overflow-hidden">
+        <div class="flex flex-col md:flex-row">
+            <img class="w-full max-w-xs object-cover rounded-lg" src="{{book.image.url}}" alt="Book image" />
+            <div class="p-6">
+                <h1 class="text-3xl font-bold mb-4">{{ book.book_name }}</h1>
+                <p class="text-lg mb-4">{{ book.content }}</p>
+                <div class="flex flex-wrap text-lg mb-4">
+                    <h5 class="mr-2"><span class="font-semibold">Category:</span> {{ book.category.name }}</h5>
+                    <h5 class="mr-2"><span class="font-semibold">Price:</span> {{ book.book_price }} BDT</h5>
+                    <h5><span class="font-semibold">Quantity:</span> {{ book.quantity }}</h5>
+                </div>
+                {% if request.user.is_authenticated %}
+                    {% if has_purchased %}
+                        {% if has_returned %}
+                            <a href="{% url 'book_buy' book.id %}" class="bg-yellow-500 hover:bg-yellow-600 text-white font-semibold py-2 px-4 rounded">Buy Now</a>
+                        {% else %}
+                            <a href="{% url 'book_return' book.id %}" class="bg-red-500 hover:bg-red-600 text-white font-semibold py-2 px-4 rounded">Return Book</a>
+                        {% endif %}
+                    {% else %}
+                        {% if request.user.is_superuser %}
+                            <h3 class="font-bold">Super user cann't purchased book</h3>
+                        {% else %}
+                            <a href="{% url 'book_buy' book.id %}" class="bg-yellow-500 hover:bg-yellow-600 text-white font-semibold py-2 px-4 rounded">Buy Now</a>
+                        {% endif %}
+                    {% endif %}
+                {% else %}
+                    <a href="{% url 'login' %}" class="bg-yellow-500 hover:bg-yellow-600 text-white font-semibold py-2 px-4 rounded">Login to Buy</a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="bg-white shadow-lg rounded-lg mt-6 p-4">
+    <h5 class="text-lg font-semibold">Total Reviews: {{ reviews|length }}</h5>
+    {% for review in reviews %}
+        <div class="bg-gray-100 border rounded-lg p-3 my-2">
+            <p class="text-sm text-gray-700"><b>{{ review.name }}</b> - {{ review.created_on }}</p>
+            <h6 class="text-base">{{ review.body|truncatewords:10 }}</h6>
+        </div>
+    {% endfor %}
+</div>
+
+{% if can_review %}
+<div class="bg-white shadow-lg rounded-lg mt-6 p-6">
+    <h1 class="text-2xl font-bold mb-4">Add Review</h1>
+    <form method="post" action="{% url 'detail_book' book.pk %}">
+        {% csrf_token %}
+        
+        <div class="mb-4">
+            <label class="block text-gray-700 text-sm font-bold mb-2" for="review_name">
+                Your Name
+            </label>
+            <input 
+                type="text" 
+                name="name" 
+                id="review_name" 
+                class="shadow appearance-none border border-gray-300 rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400" 
+                placeholder="Enter your name" 
+                required>
+        </div>
+        
+        <div class="mb-4">
+            <label class="block text-gray-700 text-sm font-bold mb-2" for="review_email">
+                Your Email
+            </label>
+            <input 
+                type="email" 
+                name="email" 
+                id="review_email" 
+                class="shadow appearance-none border border-gray-300 rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400" 
+                placeholder="Enter your email" 
+                required>
+        </div>
+        
+        <div class="mb-4">
+            <label class="block text-gray-700 text-sm font-bold mb-2" for="review_body">
+                Your Review
+            </label>
+            <textarea 
+                name="body" 
+                id="review_body" 
+                rows="5" 
+                class="shadow appearance-none border border-gray-300 rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400" 
+                placeholder="Write your review here..." 
+                required></textarea>
+        </div>
+        <button class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded mt-4" type="submit">Submit</button>
+    </form>
+</div>
+{% else %}
+    <div class="bg-white shadow-lg rounded-lg m-6 p-3 flex justify-center items-center">
+        <h1 class="font-bold text-center">Only buyers can leave a review.</h1>
+    </div>
+{% endif %}
+{% endblock %}
