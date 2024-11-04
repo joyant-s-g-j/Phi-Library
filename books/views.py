@@ -120,6 +120,10 @@ class DetailBookView(DetailView):
     def post(self, request, *args, **kwargs):
         self.object = self.get_object()
 
+        if not request.user.is_authenticated:
+            messages.error(request, 'You need to be logged in to leave a review.')
+            return redirect('login')
+
         has_purchased = Order.objects.filter(buyer=request.user, book=self.object).exists()
         
         if not has_purchased:
@@ -142,8 +146,12 @@ class DetailBookView(DetailView):
         reviews = book.review.all()
         
         review_form = ReviewForm()
-        has_purchased = Order.objects.filter(buyer=self.request.user, book=book).exists()
-        has_returned = Order.objects.filter(buyer=self.request.user, book=book, returned=True).exists()
+        has_purchased = False
+        has_returned = False
+
+        if self.request.user.is_authenticated:
+            has_purchased = Order.objects.filter(buyer=self.request.user, book=book).exists()
+            has_returned = Order.objects.filter(buyer=self.request.user, book=book, returned=True).exists()
 
         context['reviews'] = reviews
         context['review_form'] = review_form
